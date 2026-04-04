@@ -14,8 +14,10 @@ EMAIL_PORT = 587  # FORCE correct port
 EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USERNAME)
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "false").lower() == "true"
+EMAIL_START_TLS = os.getenv("EMAIL_START_TLS", "true").lower() == "true"
 
-
+print("EMAIL CONFIG:", EMAIL_HOST, EMAIL_PORT, EMAIL_USE_TLS, EMAIL_START_TLS)
 def validate_email_settings():
     if not EMAIL_USERNAME or not EMAIL_PASSWORD:
         raise Exception("Email credentials are missing")

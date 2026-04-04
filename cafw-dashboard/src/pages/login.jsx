@@ -204,23 +204,23 @@ const StepDots = ({steps, current}) => (
 );
 
 function OtpRow({value, setValue, onEnter}) {
-    const refs = Array.from({length:6}, () => useRef());
+    const refs = useRef([]);
 
-    useEffect(() => { refs[0].current?.focus(); }, []);
+    useEffect(() => { refs.current[0]?.focus(); }, []);
 
     const handleChange = (i, val) => {
         if (!/^\d*$/.test(val)) return;
         const next = [...value];
         next[i] = val.slice(-1);
         setValue(next);
-        if (val && i < 5) refs[i+1].current?.focus();
+        if (val && i < 5) refs.current[i+1]?.focus();
     };
 
     const handleKey = (i, e) => {
         if (e.key === "Backspace") {
             if (!value[i] && i > 0) {
                 const next=[...value]; next[i-1]=""; setValue(next);
-                refs[i-1].current?.focus();
+                refs.current[i-1]?.focus();
             } else {
                 const next=[...value]; next[i]=""; setValue(next);
             }
@@ -233,7 +233,7 @@ function OtpRow({value, setValue, onEnter}) {
             .replace(/\D/g,"").slice(0,6);
         if (p.length === 6) {
             setValue(p.split(""));
-            refs[5].current?.focus();
+            refs.current[5]?.focus();
         }
         e.preventDefault();
     };
@@ -242,7 +242,7 @@ function OtpRow({value, setValue, onEnter}) {
         <div style={{display:"flex", gap:"8px",
             justifyContent:"center", width:"100%"}}>
             {value.map((d,i) => (
-                <input key={i} ref={refs[i]}
+                <input key={i} ref={node => { refs.current[i] = node; }}
                        className={`otp-box${d?" filled":""}`}
                        type="text" inputMode="numeric"
                        maxLength={1} value={d} placeholder="·"
@@ -407,6 +407,24 @@ export default function Login({setupDone, onLogin, onSetupComplete}) {
         return () => clearTimeout(timerRef.current);
     }, [otpTimer]);
 
+    useEffect(() => {
+        if (lockTimer <= 0) {
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            setLockTimer(current => {
+                if (current <= 1) {
+                    setError("");
+                    return 0;
+                }
+                return current - 1;
+            });
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [lockTimer]);
+
     const go = (s) => {
         setError(""); setSuccess("");
         setShowPass(false); setShowPass2(false);
@@ -499,15 +517,6 @@ export default function Login({setupDone, onLogin, onSetupComplete}) {
                 const m = msg.match(/(\d+) seconds/);
                 const s = m ? parseInt(m[1]) : 30;
                 setLockTimer(s);
-                const iv = setInterval(() => {
-                    setLockTimer(p => {
-                        if (p<=1) {
-                            clearInterval(iv);
-                            setError(""); return 0;
-                        }
-                        return p-1;
-                    });
-                }, 1000);
             }
         } finally { setLoading(false); }
     };
@@ -833,8 +842,8 @@ export default function Login({setupDone, onLogin, onSetupComplete}) {
                             </div>
                             <div style={{fontSize:"11px", color:c.muted,
                                 marginTop:"5px"}}>
-                                Default key: CAFW-ADMIN-SETUP-2024
-                                (change in .env)
+                                Use the provisioning key configured on the
+                                backend server.
                             </div>
                         </div>
 

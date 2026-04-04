@@ -1,0 +1,15 @@
+# Python
+cafw-backend/venv/
+cafw-backend/__pycache__/
+cafw-backend/*.pyc
+cafw-backend/.env
+cafw-backend/waf.db
+
+# Node
+cafw-dashboard/node_modules/
+cafw-dashboard/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml

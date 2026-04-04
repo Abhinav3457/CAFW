@@ -1,10 +1,22 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(null);
+
+function getInitialTheme() {
+    if (typeof window === "undefined") {
+        return false;
+    }
+
+    return window.localStorage.getItem("cafw_theme") === "dark";
+}
 
 export function ThemeProvider({ children }) {
-    const [dark, setDark] = useState(false);
+    const [dark, setDark] = useState(getInitialTheme);
     const toggle = () => setDark(p => !p);
+
+    useEffect(() => {
+        window.localStorage.setItem("cafw_theme", dark ? "dark" : "light");
+    }, [dark]);
 
     const t = {
         dark,
@@ -33,4 +45,10 @@ export function ThemeProvider({ children }) {
     );
 }
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error("useTheme must be used within a ThemeProvider");
+    }
+    return context;
+};

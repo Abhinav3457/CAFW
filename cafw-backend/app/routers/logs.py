@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import AttackLog
 from app.schemas import AttackLogOut
@@ -9,8 +9,8 @@ router = APIRouter(prefix="/logs", tags=["Attack Logs"])
 
 @router.get("/", response_model=List[AttackLogOut])
 def get_logs(
-        skip: int = 0,
-        limit: int = 50,
+        skip: int = Query(0, ge=0),
+        limit: int = Query(50, ge=1, le=500),
         category: Optional[str] = Query(None),
         ip_address: Optional[str] = Query(None),
         db: Session = Depends(get_db)
@@ -31,6 +31,5 @@ def get_log_count(db: Session = Depends(get_db)):
 def get_log(log_id: int, db: Session = Depends(get_db)):
     log = db.query(AttackLog).filter(AttackLog.id == log_id).first()
     if not log:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Log not found")
     return log

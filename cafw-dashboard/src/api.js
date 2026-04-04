@@ -1,12 +1,23 @@
 import axios from "axios";
 
+const DEFAULT_API_BASE_URL = import.meta.env.DEV
+    ? "http://127.0.0.1:8000"
+    : "https://cafw-backend.onrender.com";
+
+const API_BASE_URL = (
+    import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL
+).replace(/\/+$/, "");
+
 const API = axios.create({
-    baseURL: "https://cafw-backend.onrender.com",
+    baseURL: API_BASE_URL,
+    timeout: 15000,
 });
 
 API.interceptors.request.use(config => {
     const token = localStorage.getItem("cafw_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
 });
 

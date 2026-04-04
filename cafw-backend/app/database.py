@@ -1,17 +1,33 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import os
+from pathlib import Path
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./waf.db"
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+DEFAULT_SQLITE_PATH = BASE_DIR / "waf.db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"sqlite:///{DEFAULT_SQLITE_PATH.as_posix()}",
+)
+CONNECT_ARGS = (
+    {"check_same_thread": False}
+    if SQLALCHEMY_DATABASE_URL.startswith("sqlite")
+    else {}
+)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=CONNECT_ARGS,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()

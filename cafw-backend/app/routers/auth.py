@@ -2,20 +2,36 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from pathlib import Path
 from app.database import get_db
 from app.models import AdminUser, SystemConfig
 from app.email_service import send_otp_email
-from jose import JWTError, jwt
 import hashlib, secrets, time, os
 from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    from jose import JWTError, jwt
+except ImportError:
+    import jwt
+    from jwt import InvalidTokenError as JWTError
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
 
 router     = APIRouter(prefix="/auth", tags=["Auth"])
 security   = HTTPBearer(auto_error=False)
 
-SECRET_KEY     = os.getenv("SECRET_KEY", "fallback-secret-key")
-PROVISION_KEY  = os.getenv("PROVISION_KEY", "CAFW-ADMIN-SETUP-2024")
+def _require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(
+            f"{name} is not configured. Set it in the backend environment or .env file."
+        )
+    return value
+
+
+SECRET_KEY     = _require_env("SECRET_KEY")
+PROVISION_KEY  = os.getenv("PROVISION_KEY", "").strip()
 ALGORITHM      = "HS256"
 TOKEN_EXPIRE   = 60 * 60 * 8   # 8 hours
 
@@ -32,6 +48,26 @@ def hash_password(p: str) -> str:
 
 def generate_otp() -> str:
     return str(secrets.randbelow(900000) + 100000)
+
+def cleanup_expired_state():
+    now = time.time()
+
+    expired_otps = [
+        email for email, entry in otp_store.items()
+        if entry.get("expires", 0) <= now
+    ]
+    for email in expired_otps:
+        otp_store.pop(email, None)
+
+    expired_lockouts = [
+        email for email, entry in lockout_store.items()
+        if entry.get("until", 0) and entry.get("until", 0) <= now
+    ]
+    for email in expired_lockouts:
+        lockout_store.pop(email, None)
+
+def log_otp_issued(event: str, email: str):
+    print(f"[{event}] OTP issued for {email}")
 
 def create_token(email: str, full_name: str) -> str:
     payload = {
@@ -63,11 +99,17 @@ def is_setup_done(db: Session) -> bool:
     return cfg is not None and cfg.value == "true"
 
 def mark_setup_done(db: Session):
-    cfg = SystemConfig(key="setup_complete", value="true")
-    db.add(cfg)
+    cfg = db.query(SystemConfig).filter(
+        SystemConfig.key == "setup_complete"
+    ).first()
+    if cfg:
+        cfg.value = "true"
+    else:
+        db.add(SystemConfig(key="setup_complete", value="true"))
     db.commit()
 
 def check_lockout(email: str):
+    cleanup_expired_state()
     entry = lockout_store.get(email)
     if not entry:
         return
@@ -100,6 +142,7 @@ def clear_lockout(email: str):
     lockout_store.pop(email, None)
 
 def verify_otp_internal(email: str, otp: str, expected_type: str):
+    cleanup_expired_state()
     entry = otp_store.get(email)
     if not entry:
         raise HTTPException(status_code=400,
@@ -162,9 +205,16 @@ def get_status(db: Session = Depends(get_db)):
 @router.post("/setup")
 async def setup(data: SetupRequest, db: Session = Depends(get_db)):
     """One-time admin provisioning — only works before setup is complete."""
+    cleanup_expired_state()
     if is_setup_done(db):
         raise HTTPException(status_code=403,
                             detail="System already configured. Admin registration is closed.")
+
+    if not PROVISION_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin provisioning is not configured on the server.",
+        )
 
     if data.provision_key != PROVISION_KEY:
         raise HTTPException(status_code=403,
@@ -204,7 +254,7 @@ async def setup(data: SetupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500,
                             detail=f"Failed to send OTP: {str(e)[:100]}")
 
-    print(f"[SETUP OTP] {data.email} → {otp}")
+    log_otp_issued("SETUP OTP", data.email)
     return {"message": f"OTP sent to {data.email}. Valid for 5 minutes."}
 
 
@@ -230,6 +280,7 @@ def verify_setup(data: VerifySetupRequest, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
+    cleanup_expired_state()
     data.email = data.email.lower().strip()
     check_lockout(data.email)
 
@@ -257,7 +308,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500,
                             detail=f"Failed to send OTP: {str(e)[:100]}")
 
-    print(f"[LOGIN OTP] {data.email} → {otp}")
+    log_otp_issued("LOGIN OTP", data.email)
     return {"message": f"OTP sent to {data.email}."}
 
 
@@ -281,6 +332,7 @@ def verify_login(data: VerifyOTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/forgot-password")
 async def forgot_password(data: OTPRequest, db: Session = Depends(get_db)):
+    cleanup_expired_state()
     data.email = data.email.lower().strip()
     user = db.query(AdminUser).filter(
         AdminUser.email == data.email).first()
@@ -302,7 +354,7 @@ async def forgot_password(data: OTPRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500,
                             detail=f"Failed to send OTP: {str(e)[:100]}")
 
-    print(f"[RESET OTP] {data.email} → {otp}")
+    log_otp_issued("RESET OTP", data.email)
     return {"message": f"OTP sent to {data.email}."}
 
 
@@ -320,6 +372,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     user.password_hash = hash_password(data.new_password)
     db.commit()
     return {"message": "Password reset successfully."}
+
 
 
 @router.get("/me")

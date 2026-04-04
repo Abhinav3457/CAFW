@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getStats, getCategoryBreakdown, getRecentAttacks } from "../api";
 import { useTheme } from "../ThemeContext";
 import {
@@ -24,9 +25,11 @@ export default function Dashboard({ onLogout }) {
     const [breakdown, setBreakdown]   = useState([]);
     const [recent, setRecent]         = useState([]);
     const [loading, setLoading]       = useState(true);
+    const [error, setError]           = useState("");
 
     const fetchData = () => {
         setLoading(true);
+        setError("");
         Promise.all([
             getStats(),
             getCategoryBreakdown(),
@@ -36,7 +39,13 @@ export default function Dashboard({ onLogout }) {
             setBreakdown(b.data);
             setRecent(r.data);
             setLoading(false);
-        }).catch(() => setLoading(false));
+        }).catch(() => {
+            setStats(null);
+            setBreakdown([]);
+            setRecent([]);
+            setError("Unable to load dashboard data right now.");
+            setLoading(false);
+        });
     };
 
     useEffect(() => { fetchData(); }, []);
@@ -93,6 +102,13 @@ export default function Dashboard({ onLogout }) {
                     <div style={{ textAlign: "center", padding: "40px",
                         color: t.textSub, fontSize: "15px" }}>
                         Loading dashboard data...
+                    </div>
+                )}
+
+                {!loading && error && (
+                    <div style={{ ...card, padding: "16px 20px",
+                        color: "#ef4444", fontSize: "14px" }}>
+                        {error}
                     </div>
                 )}
 
@@ -183,10 +199,10 @@ export default function Dashboard({ onLogout }) {
                                 alignItems: "center", marginBottom: "16px" }}>
                                 <div style={{ fontSize: "17px", fontWeight: "600",
                                     color: t.text }}>Recent Logs</div>
-                                <a href="/logs" style={{ fontSize: "13px",
+                                <Link to="/logs" style={{ fontSize: "13px",
                                     color: "#2563eb", textDecoration: "none" }}>
                                     View all →
-                                </a>
+                                </Link>
                             </div>
                             <table style={{ width: "100%", borderCollapse: "collapse",
                                 fontSize: "13px", minWidth: "380px" }}>

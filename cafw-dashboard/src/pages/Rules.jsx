@@ -5,16 +5,51 @@ import { useTheme } from "../ThemeContext";
 export default function Rules() {
     const t = useTheme();
     const [rules, setRules] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [savingRuleId, setSavingRuleId] = useState(null);
 
     useEffect(() => {
-        getRules().then(r => setRules(r.data)).catch(console.error);
+        let isActive = true;
+        setLoading(true);
+        setError("");
+
+        getRules()
+            .then(r => {
+                if (isActive) {
+                    setRules(r.data);
+                }
+            })
+            .catch(() => {
+                if (isActive) {
+                    setRules([]);
+                    setError("Unable to load firewall rules right now.");
+                }
+            })
+            .finally(() => {
+                if (isActive) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isActive = false;
+        };
     }, []);
 
     const handleToggle = async (rule) => {
-        await toggleRule(rule.id, !rule.is_active);
-        setRules(prev => prev.map(r =>
-            r.id === rule.id ? { ...r, is_active: !r.is_active } : r
-        ));
+        setError("");
+        setSavingRuleId(rule.id);
+        try {
+            await toggleRule(rule.id, !rule.is_active);
+            setRules(prev => prev.map(r =>
+                r.id === rule.id ? { ...r, is_active: !r.is_active } : r
+            ));
+        } catch {
+            setError("Unable to update that rule right now.");
+        } finally {
+            setSavingRuleId(null);
+        }
     };
 
     const card = {
@@ -42,6 +77,13 @@ export default function Rules() {
             </div>
 
             <div style={{ ...card, overflow: "hidden" }}>
+                {error && (
+                    <div style={{ padding: "14px 24px", color: "#ef4444",
+                        borderBottom: `1px solid ${t.cardBorder}`,
+                        fontSize: "13px" }}>
+                        {error}
+                    </div>
+                )}
                 <div style={{ padding: "16px 24px",
                     borderBottom: `1px solid ${t.cardBorder}`,
                     display: "flex", justifyContent: "space-between",
@@ -54,7 +96,11 @@ export default function Rules() {
           </span>
                 </div>
 
-                {rules.length === 0 ? (
+                {loading ? (
+                    <div style={{ padding: "28px 24px", color: t.textMuted, fontSize: "14px" }}>
+                        Loading rules...
+                    </div>
+                ) : rules.length === 0 ? (
                     <div style={{ padding: "28px 24px", color: t.textMuted, fontSize: "14px" }}>
                         No rules configured yet.
                     </div>
@@ -78,11 +124,12 @@ export default function Rules() {
                             borderRadius: "4px", fontFamily: "monospace" }}>
               {rule.category}
             </span>
-                        <div onClick={() => handleToggle(rule)} style={{
+                        <div onClick={() => savingRuleId === null && handleToggle(rule)} style={{
                             width: "44px", height: "24px", borderRadius: "12px",
                             cursor: "pointer", flexShrink: 0,
                             background: rule.is_active ? "#2563eb" : t.inputBorder,
-                            position: "relative", transition: "background .2s"
+                            position: "relative", transition: "background .2s",
+                            opacity: savingRuleId === rule.id ? 0.6 : 1
                         }}>
                             <div style={{
                                 position: "absolute", top: "4px",

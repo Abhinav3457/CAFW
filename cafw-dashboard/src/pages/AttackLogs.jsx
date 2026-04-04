@@ -4,12 +4,37 @@ import { useTheme } from "../ThemeContext";
 
 export default function AttackLogs() {
     const t = useTheme();
-    const [logs, setLogs]         = useState([]);
+    const [logs, setLogs] = useState([]);
     const [category, setCategory] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
+        let isActive = true;
+        setLoading(true);
+        setError("");
+
         getLogs(category ? { category } : {})
-            .then(r => setLogs(r.data)).catch(console.error);
+            .then(r => {
+                if (isActive) {
+                    setLogs(r.data);
+                }
+            })
+            .catch(() => {
+                if (isActive) {
+                    setLogs([]);
+                    setError("Unable to load attack logs right now.");
+                }
+            })
+            .finally(() => {
+                if (isActive) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isActive = false;
+        };
     }, [category]);
 
     const card = {
@@ -52,6 +77,13 @@ export default function AttackLogs() {
             </div>
 
             <div style={{ ...card, overflowX: "auto" }}>
+                {error && (
+                    <div style={{ padding: "14px 16px", color: "#ef4444",
+                        borderBottom: `1px solid ${t.cardBorder}`,
+                        fontSize: "13px" }}>
+                        {error}
+                    </div>
+                )}
                 <table style={{ width: "100%", borderCollapse: "collapse",
                     fontSize: "13px", minWidth: "600px" }}>
                     <thead>
@@ -64,7 +96,10 @@ export default function AttackLogs() {
                     </tr>
                     </thead>
                     <tbody>
-                    {logs.length === 0 ? (
+                    {loading ? (
+                        <tr><td colSpan={6} style={{ padding: "24px 14px",
+                            color: t.textMuted, fontSize: "14px" }}>Loading logs...</td></tr>
+                    ) : logs.length === 0 ? (
                         <tr><td colSpan={6} style={{ padding: "24px 14px",
                             color: t.textMuted, fontSize: "14px" }}>No logs yet.</td></tr>
                     ) : logs.map(log => (

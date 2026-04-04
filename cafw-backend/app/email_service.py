@@ -1,18 +1,85 @@
-import aiosmtplib
+﻿import os
+import asyncio
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 
-load_dotenv()
+try:
+    import aiosmtplib
+except ImportError:
+    aiosmtplib = None
 
-EMAIL_HOST     = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT     = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USERNAME = os.getenv("EMAIL_USERNAME", "")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
-EMAIL_FROM     = os.getenv("EMAIL_FROM", "")
+BASE_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BASE_DIR / ".env")
+
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+EMAIL_USERNAME = os.getenv("EMAIL_USERNAME", "").strip()
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "").strip()
+EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USERNAME).strip()
+
+
+def _env_flag(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+EMAIL_USE_TLS = _env_flag("EMAIL_USE_TLS", EMAIL_PORT == 465)
+EMAIL_START_TLS = _env_flag("EMAIL_START_TLS", EMAIL_PORT not in {25, 465})
+
+
+def _validate_email_settings() -> None:
+    missing = [
+        name
+        for name, value in {
+            "EMAIL_USERNAME": EMAIL_USERNAME,
+            "EMAIL_PASSWORD": EMAIL_PASSWORD,
+            "EMAIL_FROM": EMAIL_FROM,
+        }.items()
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(
+            "Email delivery is not configured. Missing: "
+            + ", ".join(missing)
+        )
+
+
+def _build_send_kwargs() -> dict:
+    send_kwargs = {
+        "hostname": EMAIL_HOST,
+        "port": EMAIL_PORT,
+        "username": EMAIL_USERNAME,
+        "password": EMAIL_PASSWORD,
+        "timeout": 10,
+    }
+    if EMAIL_USE_TLS:
+        send_kwargs["use_tls"] = True
+    else:
+        send_kwargs["start_tls"] = EMAIL_START_TLS
+    return send_kwargs
+
+
+def _send_with_smtplib(msg: MIMEMultipart) -> None:
+    if EMAIL_USE_TLS:
+        with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, timeout=10) as smtp:
+            smtp.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+        return
+
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=10) as smtp:
+        if EMAIL_START_TLS:
+            smtp.starttls()
+        smtp.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        smtp.send_message(msg)
 
 async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
+    _validate_email_settings()
 
     purposes = {
         "login":    ("CAFW Login Verification", "sign in to"),
@@ -37,7 +104,7 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
             <tr>
               <td style="background:linear-gradient(135deg,#0d2050,#1e3a8a);
                 padding:28px;text-align:center;">
-                <div style="font-size:32px;margin-bottom:8px;">🛡</div>
+                <div style="font-size:32px;margin-bottom:8px;">CAFW</div>
                 <h1 style="color:#e2e8f0;font-size:20px;
                   font-weight:700;margin:0;">
                   Firewall Admin Dashboard
@@ -75,7 +142,7 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
                   </div>
                   <div style="font-size:11px;color:#334155;
                     margin-top:10px;letter-spacing:.5px;">
-                    ONE-TIME PASSWORD · VALID FOR 5 MINUTES
+                    ONE-TIME PASSWORD | VALID FOR 5 MINUTES
                   </div>
                 </div>
 
@@ -86,7 +153,7 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
                   padding:12px 14px;margin-bottom:20px;">
                   <p style="color:#fbbf24;font-size:12px;
                     margin:0;line-height:1.6;">
-                    ⚠ <strong>Security notice:</strong>
+                    Warning: <strong>Security notice:</strong>
                     Never share this OTP with anyone.
                     CAFW staff will never ask for your OTP.
                   </p>
@@ -104,8 +171,8 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
               <td style="background:#080f1e;padding:16px 36px;
                 border-top:1px solid #1a2540;text-align:center;">
                 <p style="color:#334155;font-size:11px;margin:0;">
-                  CAFW v1.0.0 · All activity is monitored and logged<br>
-                  This is an automated message — do not reply
+                  CAFW v1.0.0 | All activity is monitored and logged<br>
+                  This is an automated message - do not reply
                 </p>
               </td>
             </tr>
@@ -119,15 +186,13 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"]    = f"CAFW Security <{EMAIL_FROM}>"
-    msg["To"]      = to_email
+    msg["From"] = f"CAFW Security <{EMAIL_FROM}>"
+    msg["To"] = to_email
     msg.attach(MIMEText(html, "html"))
 
-    await aiosmtplib.send(
-        msg,
-        hostname=EMAIL_HOST,
-        port=EMAIL_PORT,
-        username=EMAIL_USERNAME,
-        password=EMAIL_PASSWORD,
-        start_tls=True,
-    )
+    if aiosmtplib is not None:
+        await aiosmtplib.send(msg, **_build_send_kwargs())
+        return
+
+    await asyncio.to_thread(_send_with_smtplib, msg)
+

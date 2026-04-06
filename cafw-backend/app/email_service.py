@@ -3,13 +3,20 @@ import asyncio
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import aiosmtplib
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ENV VARIABLES
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+def _clean(value: str | None, default: str = "") -> str:
+    if value is None:
+        return default
+    return value.strip().strip('"').strip("'")
+
+
+EMAIL_HOST = _clean(os.getenv("EMAIL_HOST"), "smtp.gmail.com")
 
 
 def _parse_port(value: str) -> int:
@@ -19,10 +26,10 @@ def _parse_port(value: str) -> int:
         return 587
 
 
-EMAIL_PORT = _parse_port(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
-EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USERNAME)
+EMAIL_PORT = _parse_port(_clean(os.getenv("EMAIL_PORT", "587"), "587"))
+EMAIL_USERNAME = _clean(os.getenv("EMAIL_USERNAME"))
+EMAIL_PASSWORD = _clean(os.getenv("EMAIL_PASSWORD"))
+EMAIL_FROM = _clean(os.getenv("EMAIL_FROM"), EMAIL_USERNAME)
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "false").lower() == "true"
 EMAIL_START_TLS = os.getenv("EMAIL_START_TLS", "true").lower() == "true"
 SMTP_TIMEOUT = 8
@@ -76,6 +83,23 @@ def send_email_sync(msg):
     raise Exception(f"SMTP delivery failed: {last_error}")
 
 
+async def _send_email_async(msg):
+    try:
+        await aiosmtplib.send(
+            msg,
+            hostname=EMAIL_HOST,
+            port=EMAIL_PORT,
+            username=EMAIL_USERNAME,
+            password=EMAIL_PASSWORD,
+            use_tls=EMAIL_USE_TLS,
+            start_tls=(False if EMAIL_USE_TLS else EMAIL_START_TLS),
+            timeout=SMTP_TIMEOUT,
+        )
+    except Exception:
+        # Fallback to stdlib path for providers with strict protocol quirks.
+        await asyncio.to_thread(send_email_sync, msg)
+
+
 async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
     validate_email_settings()
 
@@ -105,5 +129,4 @@ async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
 
     msg.attach(MIMEText(html, "html"))
 
-    # run blocking code in thread
-    await asyncio.to_thread(send_email_sync, msg)
+    await _send_email_async(msg)

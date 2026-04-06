@@ -10,7 +10,7 @@ load_dotenv()
 
 # ENV VARIABLES
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = 587  # FORCE correct port
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM", EMAIL_USERNAME)
@@ -24,8 +24,16 @@ def validate_email_settings():
 
 
 def send_email_sync(msg):
-    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=10) as server:
-        server.starttls()  # IMPORTANT
+    # Respect deployment SMTP mode: implicit TLS (e.g. 465) or STARTTLS (e.g. 587).
+    if EMAIL_USE_TLS:
+        with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT, timeout=15) as server:
+            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+            server.send_message(msg)
+        return
+
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=15) as server:
+        if EMAIL_START_TLS:
+            server.starttls()
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
         server.send_message(msg)
 

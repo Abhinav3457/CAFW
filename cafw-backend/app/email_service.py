@@ -36,8 +36,8 @@ SMTP_TIMEOUT = 8
 
 
 def validate_email_settings():
-    if not EMAIL_USERNAME or not EMAIL_PASSWORD:
-        raise Exception("Email credentials are missing")
+    """Check if email credentials are available. Returns True if ok, False otherwise."""
+    return bool(EMAIL_USERNAME and EMAIL_PASSWORD)
 
 
 def _send_ssl(msg):
@@ -101,7 +101,8 @@ async def _send_email_async(msg):
 
 
 async def send_otp_email(to_email: str, otp: str, purpose: str = "login"):
-    validate_email_settings()
+    if not validate_email_settings():
+        raise Exception("Email credentials not configured on server")
 
     subject_map = {
         "login": "CAFW Login Verification",

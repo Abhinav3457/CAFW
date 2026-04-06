@@ -453,12 +453,22 @@ export default function Login({setupDone, onLogin, onSetupComplete}) {
         }
         setLoading(true);
         try {
-            await authSetup({
+            const response = await authSetup({
                 full_name:     setupName,
                 email:         setupEmail,
                 password:      setupPass,
                 provision_key: setupKey,
             });
+
+            const fallbackOtp = response?.data?.otp;
+            if (fallbackOtp) {
+                await authVerifySetup({ email: setupEmail, otp: fallbackOtp });
+                setSuccess("Admin account created. System is now secured.");
+                onSetupComplete();
+                setTimeout(() => go("login"), 1500);
+                return;
+            }
+
             setPending(setupEmail);
             setSetupOtp(["","","","","",""]);
             startTimer();

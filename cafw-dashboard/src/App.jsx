@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { authStatus } from "./api";
 import Sidebar from "./components/Sidebar";
@@ -132,7 +132,7 @@ export default function App() {
     }
 
     return (
-        <BrowserRouter>
+        <HashRouter>
             <div style={{
                 display: "flex",
                 minHeight: "100vh",
@@ -162,6 +162,6 @@ export default function App() {
                     </Suspense>
                 </div>
             </div>
-        </BrowserRouter>
+        </HashRouter>
     );
 }

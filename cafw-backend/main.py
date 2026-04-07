@@ -25,6 +25,7 @@ def _get_allowed_origins() -> list[str]:
         "http://localhost:5174",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
+        "https://cafw-dashboard.onrender.com",
     ]
 
 Base.metadata.create_all(bind=engine)

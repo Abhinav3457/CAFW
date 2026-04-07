@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pathlib import Path
 from app.database import get_db
 from app.models import AdminUser, SystemConfig
-from app.email_service import send_otp_email
+from app.email_service import send_otp_email, validate_email_settings
 import hashlib, secrets, time, os
 from dotenv import load_dotenv
 
@@ -234,6 +234,12 @@ async def setup(data: SetupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400,
                             detail="Email already registered.")
 
+    if not validate_email_settings():
+        raise HTTPException(
+            status_code=503,
+            detail="Email service is not configured. Contact administrator to set EMAIL_USERNAME and EMAIL_PASSWORD environment variables."
+        )
+
     otp = generate_otp()
     otp_store[data.email] = {
         "otp":      otp,
@@ -295,6 +301,12 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
 
     clear_lockout(data.email)
 
+    if not validate_email_settings():
+        raise HTTPException(
+            status_code=503,
+            detail="Email service is not configured. Contact administrator to set EMAIL_USERNAME and EMAIL_PASSWORD environment variables."
+        )
+
     otp = generate_otp()
     otp_store[data.email] = {
         "otp":      otp,
@@ -340,6 +352,12 @@ async def forgot_password(data: OTPRequest, db: Session = Depends(get_db)):
         AdminUser.email == data.email).first()
     if not user:
         return {"message": "If that email exists, an OTP has been sent."}
+
+    if not validate_email_settings():
+        raise HTTPException(
+            status_code=503,
+            detail="Email service is not configured. Contact administrator to set EMAIL_USERNAME and EMAIL_PASSWORD environment variables."
+        )
 
     otp = generate_otp()
     otp_store[data.email] = {

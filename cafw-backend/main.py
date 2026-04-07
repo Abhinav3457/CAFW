@@ -15,6 +15,19 @@ load_dotenv(BASE_DIR / ".env")
 
 VERSION = "1.0.0"
 
+def _check_required_env_vars():
+    """Warn about missing required environment variables on startup."""
+    missing = []
+    if not os.getenv("SECRET_KEY", "").strip():
+        missing.append("SECRET_KEY")
+    
+    print("[STARTUP CHECK]")
+    if missing:
+        print(f"  ⚠️  WARNING: Missing environment variables: {', '.join(missing)}")
+        print("  Set these on your deployment platform (Render, etc.) before using auth endpoints.")
+    else:
+        print("  ✓ All required environment variables are set.")
+
 
 def _get_allowed_origins() -> list[str]:
     configured = os.getenv("FRONTEND_ORIGINS", "").strip()
@@ -34,6 +47,10 @@ app = FastAPI(
     title="CAFW - Context Aware Firewall",
     version=VERSION,
 )
+
+@app.on_event("startup")
+async def startup_event():
+    _check_required_env_vars()
 
 app.add_middleware(FirewallMiddleware)
 app.add_middleware(

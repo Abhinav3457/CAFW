@@ -92,7 +92,7 @@ export default function App() {
             })
             .catch(() => {
                 if (isActive) {
-                    setSetupDone(true);
+                    setSetupDone(false);
                 }
             });
 

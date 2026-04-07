@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import {
     authSetup, authVerifySetup,
     authLogin, authVerifyLogin,
-    authForgotPassword, authResetPassword
+    authForgotPassword, authResetPassword,
+    authStatus
 } from "../api";
 
 function getStrength(p) {
@@ -522,6 +523,18 @@ export default function Login({setupDone, onLogin, onSetupComplete}) {
             setSuccess(`OTP sent to ${loginEmail}. Check your inbox.`);
         } catch(e) {
             const msg = e.response?.data?.detail || "Login failed.";
+            if (e.response?.status === 401) {
+                try {
+                    const status = await authStatus();
+                    if (!status?.data?.setup_complete) {
+                        go("setup");
+                        setError("This deployment is not set up yet. Create the admin account first.");
+                        return;
+                    }
+                } catch {
+                    // Keep the original login error if status check fails.
+                }
+            }
             setError(msg);
             if (e.response?.status === 423) {
                 const m = msg.match(/(\d+) seconds/);

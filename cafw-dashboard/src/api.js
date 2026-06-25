@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// In production, set VITE_API_URL to your Render backend URL (e.g. https://cafw-k3d1.onrender.com)
+// In local dev, it falls back to http://localhost:8000
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },

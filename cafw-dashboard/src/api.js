@@ -1,50 +1,25 @@
 import axios from 'axios';
 
-// In production, set VITE_API_URL to your Render backend URL (e.g. https://cafw-k3d1.onrender.com)
-// In local dev, it falls back to http://localhost:8000
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL || '',
+  timeout: 10000,
 });
 
-export function getStats() {
-  return api.get('/api/dashboard/stats').then(res => res.data);
-}
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.code === 'ECONNABORTED') console.error('Request timed out');
+    else if (!err.response) console.error('Network error — is the backend running?');
+    return Promise.reject(err);
+  }
+);
 
-export function getRecentAttacks() {
-  return api.get('/api/dashboard/recent-attacks').then(res => res.data);
-}
-
-export function getCategoryBreakdown() {
-  return api.get('/api/dashboard/category-breakdown').then(res => res.data);
-}
-
-export function getTopAttackers() {
-  return api.get('/api/dashboard/top-attackers').then(res => res.data);
-}
-
-export function getLast7Days() {
-  return api.get('/api/dashboard/last-7-days').then(res => res.data);
-}
-
-export function getLogs(params = {}) {
-  return api.get('/api/logs', { params }).then(res => res.data);
-}
-
-export function getLogsCount() {
-  return api.get('/api/logs/count').then(res => res.data);
-}
-
-export function getRules() {
-  return api.get('/api/rules').then(res => res.data);
-}
-
-export function toggleRule(id, is_active) {
-  return api.patch(`/api/rules/${id}`, { is_active }).then(res => res.data);
-}
-
-export default api;
+export const getStats           = () => api.get('/api/dashboard/stats').then(r => r.data);
+export const getRecentAttacks   = () => api.get('/api/dashboard/recent-attacks').then(r => r.data);
+export const getCategoryBreakdown = () => api.get('/api/dashboard/category-breakdown').then(r => r.data);
+export const getTopAttackers    = () => api.get('/api/dashboard/top-attackers').then(r => r.data);
+export const getLast7Days       = () => api.get('/api/dashboard/last-7-days').then(r => r.data);
+export const getLogs            = (p) => api.get('/api/logs', { params: p }).then(r => r.data);
+export const getLogsCount       = (p) => api.get('/api/logs/count', { params: p }).then(r => r.data);
+export const getRules           = () => api.get('/api/rules').then(r => r.data);
+export const toggleRule         = (id, v) => api.patch(`/api/rules/${id}`, { is_active: v }).then(r => r.data);

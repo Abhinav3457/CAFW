@@ -41,7 +41,21 @@ router.get('/', (req, res) => {
  */
 router.get('/count', (req, res) => {
   try {
-    const result = queryOne('SELECT COUNT(*) as count FROM attack_logs');
+    const { category, ip_address } = req.query;
+    let sql = 'SELECT COUNT(*) as count FROM attack_logs WHERE 1=1';
+    const params = [];
+
+    if (category) {
+      sql += ' AND category = ?';
+      params.push(category);
+    }
+
+    if (ip_address) {
+      sql += ' AND ip_address = ?';
+      params.push(ip_address);
+    }
+
+    const result = queryOne(sql, params);
     res.json({ count: result ? result.count : 0 });
   } catch (err) {
     console.error('Logs count error:', err.message);

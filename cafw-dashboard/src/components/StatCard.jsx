@@ -1,43 +1,27 @@
-function StatCard({ label, value, color, icon }) {
+export default function StatCard({ label, value, color, icon, trend, trendLabel, progress, delay = 0 }) {
+  const isUp = trend === 'up';
   return (
-    <div
-      style={{
-        background: '#1e293b',
-        border: '1px solid #334155',
-        borderRadius: '12px',
-        padding: '22px',
-        transition: 'all 0.2s',
-        cursor: 'default',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = color;
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.3)`;
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = '#334155';
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <span style={{ fontSize: '13px', fontWeight: 500, color: '#94a3b8' }}>{label}</span>
-        <span style={{ fontSize: '24px' }}>{icon}</span>
+    <div className="stat-card" style={{ animationDelay: `${delay}s` }}>
+      <div className="accent-bar" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+      <div className="header">
+        <span className="label">{label}</span>
+        <span className="icon">{icon}</span>
       </div>
-      <div>
-        <span
-          style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: color || '#f1f5f9',
-            lineHeight: 1,
-          }}
-        >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span className="value" style={{ color }}>
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
+        {trend && (
+          <span className={`trend ${isUp ? 'up' : 'down'}`}>
+            {isUp ? '↑' : '↓'} {trendLabel}
+          </span>
+        )}
       </div>
+      {progress !== undefined && (
+        <div className="progress-track">
+          <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, background: `linear-gradient(90deg, ${color}66, ${color})` }} />
+        </div>
+      )}
     </div>
   );
 }
-
-export default StatCard;

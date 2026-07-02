@@ -5,11 +5,11 @@ import AttackLogs from './pages/AttackLogs';
 import Rules from './pages/Rules';
 import './App.css';
 
-function App() {
+export default function App() {
   return (
-    <div className="app-layout">
+    <div className="app">
       <Sidebar />
-      <main className="main-content">
+      <main className="main">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/logs" element={<AttackLogs />} />
@@ -20,5 +20,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

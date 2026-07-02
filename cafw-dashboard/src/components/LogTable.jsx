@@ -1,110 +1,73 @@
-const CATEGORY_STYLES = {
-  'SQL Injection': { bg: 'rgba(239,68,68,0.15)', color: '#ef4444', label: 'SQL Injection' },
-  'XSS': { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', label: 'XSS' },
-  'Command Injection': { bg: 'rgba(239,68,68,0.15)', color: '#ef4444', label: 'Cmd Injection' },
-  'Path Traversal': { bg: 'rgba(139,92,246,0.15)', color: '#8b5cf6', label: 'Path Traversal' },
-  'Blocked IP': { bg: 'rgba(100,116,139,0.15)', color: '#64748b', label: 'Blocked IP' },
+import { useState } from 'react';
+
+const CAT = {
+  'SQL Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'SQL Injection', i: '🗃️' },
+  XSS:             { bg: 'rgba(245,158,11,0.1)', c: '#f59e0b', l: 'XSS', i: '⚠️' },
+  'Command Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'Cmd Injection', i: '💻' },
+  'Path Traversal':    { bg: 'rgba(139,92,246,0.1)', c: '#8b5cf6', l: 'Path Traversal', i: '📁' },
+  'Blocked IP':    { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Blocked IP', i: '🔒' },
 };
+const DEF = { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Unknown', i: '❓' };
 
-const DEFAULT_STYLE = { bg: 'rgba(100,116,139,0.15)', color: '#64748b', label: 'Unknown' };
-
-const tableStyles = {
-  wrapper: {
-    overflowX: 'auto',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: '13px',
-  },
-  th: {
-    textAlign: 'left',
-    padding: '10px 14px',
-    color: '#64748b',
-    fontWeight: 600,
-    fontSize: '12px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    borderBottom: '2px solid #334155',
-    whiteSpace: 'nowrap',
-  },
-  td: {
-    padding: '10px 14px',
-    borderBottom: '1px solid #1e293b',
-    color: '#cbd5e1',
-    maxWidth: '200px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  tr: {
-    transition: 'background 0.15s',
-  },
-};
-
-function LogTable({ logs, showPayload = false }) {
-  if (!logs || logs.length === 0) {
-    return null;
-  }
+export default function LogTable({ logs, showPayload = false }) {
+  const [expanded, setExpanded] = useState(null);
+  if (!logs?.length) return null;
 
   return (
-    <div style={tableStyles.wrapper}>
-      <table style={tableStyles.table}>
+    <div className="table-wrap">
+      <table>
         <thead>
           <tr>
-            <th style={tableStyles.th}>Timestamp</th>
-            <th style={tableStyles.th}>IP Address</th>
-            <th style={tableStyles.th}>Method</th>
-            <th style={tableStyles.th}>Endpoint</th>
-            <th style={tableStyles.th}>Category</th>
-            {showPayload && <th style={tableStyles.th}>Payload</th>}
-            <th style={tableStyles.th}>Action</th>
+            <th>Timestamp</th>
+            <th>IP Address</th>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Category</th>
+            {showPayload && <th>Payload</th>}
+            <th>Action</th>
+            <th style={{ width: 32, textAlign: 'center' }}></th>
           </tr>
         </thead>
         <tbody>
           {logs.map((log) => {
-            const badge = CATEGORY_STYLES[log.category] || DEFAULT_STYLE;
+            const b = CAT[log.category] || DEF;
+            const isExp = expanded === log.id;
             return (
-              <tr
-                key={log.id}
-                style={tableStyles.tr}
-                onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <td style={tableStyles.td}>
-                  {new Date(log.timestamp).toLocaleString()}
+              <tr key={log.id}>
+                <td style={{ fontSize: 12 }}>
+                  <span title={new Date(log.timestamp).toLocaleString()}>
+                    {new Date(log.timestamp).toLocaleString()}
+                  </span>
                 </td>
-                <td style={tableStyles.td}>
-                  <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{log.ip_address}</span>
+                <td><span className="ip-badge">{log.ip_address}</span></td>
+                <td>
+                  <span className={`method-badge ${(log.method || '').toLowerCase()}`}>
+                    {log.method}
+                  </span>
                 </td>
-                <td style={tableStyles.td}>{log.method}</td>
-                <td style={{ ...tableStyles.td, fontFamily: 'monospace', fontSize: '12px' }}>
-                  {log.endpoint}
-                </td>
-                <td style={tableStyles.td}>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '2px 10px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      background: badge.bg,
-                      color: badge.color,
-                    }}
-                  >
-                    {badge.label}
+                <td><span className="endpoint">{log.endpoint}</span></td>
+                <td>
+                  <span className="badge" style={{ background: b.bg, color: b.c }}>
+                    <span style={{ fontSize: 12 }}>{b.i}</span> {b.l}
                   </span>
                 </td>
                 {showPayload && (
-                  <td style={{ ...tableStyles.td, maxWidth: '250px', fontSize: '12px', fontFamily: 'monospace' }}>
-                    {log.payload ? log.payload.substring(0, 80) : '-'}
+                  <td style={{ fontFamily: "'SF Mono', Consolas, monospace", fontSize: 11, opacity: 0.6 }}>
+                    {log.payload ? log.payload.substring(0, 40) + (log.payload.length > 40 ? '…' : '') : '—'}
                   </td>
                 )}
-                <td style={tableStyles.td}>
-                  <span style={{ color: log.action === 'blocked' ? '#ef4444' : '#22c55e', fontWeight: 600 }}>
-                    {log.action}
-                  </span>
+                <td>
+                  <span className={`action-badge ${log.action || 'blocked'}`}>{log.action}</span>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <button
+                    onClick={() => setExpanded(e => e === log.id ? null : log.id)}
+                    style={{
+                      background: 'none', border: 'none', color: '#4e5f7e', cursor: 'pointer',
+                      fontSize: 12, padding: '2px 6px', borderRadius: 4,
+                      transform: isExp ? 'rotate(180deg)' : 'rotate(0)', transition: 'all 0.2s',
+                    }}
+                  >▼</button>
                 </td>
               </tr>
             );
@@ -114,5 +77,3 @@ function LogTable({ logs, showPayload = false }) {
     </div>
   );
 }
-
-export default LogTable;

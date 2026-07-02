@@ -34,7 +34,6 @@ async function runTests() {
 
       const isAttackTest = test.name !== 'Safe Request' && test.name !== 'Safe Search';
       const shouldBeBlocked = isAttackTest;
-      const wasBlocked = false;
       const status = res.status;
 
       if (shouldBeBlocked && status === 200) {

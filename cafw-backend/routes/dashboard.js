@@ -119,7 +119,7 @@ router.get('/last-7-days', (req, res) => {
       ORDER BY date ASC
     `);
 
-    // Fill in missing days with zero
+    // Fill in missing days with zero (UTC dates match SQLite's CURRENT_TIMESTAMP)
     const result = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();

@@ -136,7 +136,7 @@ function seedDefaultRules() {
     ['SQL Injection - Basic Auth Bypass', 'Detects basic SQL injection attempts like OR 1=1', "('\\sOR\\s+.*\\d+\\s*=\\s*\\d|UNION\\s+SELECT|DROP\\s+TABLE|INSERT\\s+INTO|SELECT\\s+.*\\s+FROM|SLEEP\\s*\\(|BENCHMARK\\s*\\(|WAITFOR\\s+DELAY|'\\s*OR\\s*'[^']*'\\s*=\\s*'|1\\s*=\\s*1)", 'SQL Injection'],
     ['SQL Injection - Statements', 'Detects SQL statements and time-based injection', "(\\bSELECT\\b.*\\bFROM\\b|\\bINSERT\\b.*\\bINTO\\b|\\bDROP\\b.*\\bTABLE\\b|\\bDELETE\\b.*\\bFROM\\b|\\bUPDATE\\b.*\\bSET\\b|\\bALTER\\b.*\\bTABLE\\b|\\bCREATE\\b.*\\bTABLE\\b)", 'SQL Injection'],
     ['Cross-Site Scripting (XSS)', 'Detects script tags and JavaScript event handlers', "(<\\s*script[^>]*>|javascript\\s*:|onerror\\s*=|onload\\s*=|onclick\\s*=|onmouseover\\s*=|alert\\s*\\(|document\\.cookie|eval\\s*\\(|expression\\s*\\(|<\\s*iframe|<\\s*img\\s+[^>]*src\\s*=\\s*['\"]?x[^>]*>)", 'XSS'],
-    ['Command Injection', 'Detects shell command injection attempts', "(;\\s*whoami|&&\\s*ls|\\|\\s*cat|;\\s*pwd|rm\\s+-rf|wget\\s+http|curl\\s+http|/etc/passwd|/etc/shadow|cmd\\.exe|powershell|\\|\\s*dir|\\|\\s*type|`[^`]+`|\\$\\([^)]+\\))", 'Command Injection'],
+    ['Command Injection', 'Detects shell command injection attempts', "(;\\s*whoami|&&\\s*ls|\\|\\s*cat|;\\s*pwd|rm\\s+-rf|wget\\s+http|curl\\s+http|cmd\\.exe|powershell|\\|\\s*dir|\\|\\s*type|`[^`]+`|\\$\\([^)]+\\))", 'Command Injection'],
     ['Path Traversal', 'Detects directory traversal and file path attacks', "(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e\\\\|/etc/passwd|/etc/shadow|boot\\.ini|win\\.ini|/proc/self|/proc/\\d+/environ)", 'Path Traversal'],
   ];
 

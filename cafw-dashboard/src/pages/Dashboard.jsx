@@ -5,6 +5,7 @@ import {
 } from '../api';
 import StatCard from '../components/StatCard';
 import LogTable from '../components/LogTable';
+import { RefreshIcon } from '../components/Icons';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend, Area,
@@ -92,7 +93,7 @@ export default function Dashboard() {
             Auto-refresh
           </label>
           <button className="btn" onClick={load} disabled={refreshing}>
-            <span className={refreshing ? 'spin' : ''}>↻</span> Refresh
+            <span className={refreshing ? 'spin' : ''}><RefreshIcon size={14} /></span> Refresh
           </button>
         </div>
       </div>
@@ -110,13 +111,13 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="stats-grid">
-        <StatCard label="Total Requests" value={stats?.total_requests_today || 0} color="var(--accent-blue)" icon="📊" delay={0}
+        <StatCard label="Total Requests" value={stats?.total_requests_today || 0} color="var(--accent-blue)" delay={0}
           progress={stats?.total_requests_today ? Math.min((stats.total_requests_today / 1000) * 100, 100) : 0} />
-        <StatCard label="Attacks Blocked" value={stats?.attacks_blocked_today || 0} color="var(--accent-red)" icon="🛡️" delay={0.08}
+        <StatCard label="Attacks Blocked" value={stats?.attacks_blocked_today || 0} color="var(--accent-red)" delay={0.08}
           trend={stats?.attacks_blocked_today > 0 ? 'up' : null} trendLabel={stats?.attacks_blocked_today > 0 ? 'blocked' : ''} progress={blockPct} />
-        <StatCard label="Unique Attacker IPs" value={stats?.unique_attacker_ips || 0} color="var(--accent-amber)" icon="👤" delay={0.16}
+        <StatCard label="Unique Attacker IPs" value={stats?.unique_attacker_ips || 0} color="var(--accent-amber)" delay={0.16}
           progress={stats?.unique_attacker_ips > 0 ? Math.min(stats.unique_attacker_ips * 10, 100) : 0} />
-        <StatCard label="Top Attack Type" value={stats?.top_attack_category || 'None'} color="var(--accent-purple)" icon="⚡" delay={0.24}
+        <StatCard label="Top Attack Type" value={stats?.top_attack_category || 'None'} color="var(--accent-purple)" delay={0.24}
           trend={categories.length > 0 && categories[0].count > 0 ? 'up' : null}
           trendLabel={categories.length > 0 ? `${categories[0].count} hits` : ''}
           progress={total > 0 ? Math.round((categories[0]?.count / total) * 100) : 0} />
@@ -125,7 +126,7 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="charts-row">
         <div className="card" style={{ animationDelay: '0.3s' }}>
-          <h3>📈 Attacks — Last 7 Days</h3>
+          <h3>Attacks — Last 7 Days</h3>
           {days.length === 0 || days.every(d => d.count === 0) ? (
             <div className="empty" style={{ padding: '36px 0' }}><p>No attack data for the last 7 days.</p></div>
           ) : (
@@ -152,7 +153,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card" style={{ animationDelay: '0.38s' }}>
-          <h3>🎯 Attack Categories</h3>
+          <h3>Attack Categories</h3>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -175,16 +176,16 @@ export default function Dashboard() {
 
       {/* Recent Attacks */}
       <div className="card" style={{ animationDelay: '0.45s' }}>
-        <h3>🕐 Recent Attacks (Last 10)</h3>
+        <h3>Recent Attacks (Last 10)</h3>
         {recent.length > 0 ? <LogTable logs={recent} /> : (
-          <div className="empty"><div className="icon">🛡️</div><p>No attacks recorded yet.</p></div>
+          <div className="empty"><p>No attacks recorded yet.</p></div>
         )}
       </div>
 
       {/* Top Attackers */}
       {attackers.length > 0 && (
         <div className="card" style={{ animationDelay: '0.52s' }}>
-          <h3>🌍 Top Attackers</h3>
+          <h3>Top Attackers</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={attackers.slice(0, 5)} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
               <defs>

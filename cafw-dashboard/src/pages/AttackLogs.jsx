@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLogs, getLogsCount } from '../api';
 import LogTable from '../components/LogTable';
+import { SearchIcon, RefreshIcon } from '../components/Icons';
 
 const CATS = ['All', 'SQL Injection', 'XSS', 'Command Injection', 'Path Traversal'];
 
@@ -49,7 +50,7 @@ export default function AttackLogs() {
           <span className="badge" style={{ background: 'rgba(56,78,120,0.12)', color: 'var(--text-secondary)' }}>
             Total: <strong style={{ color: 'var(--text-primary)' }}>{total.toLocaleString()}</strong>
           </span>
-          <button className="btn" onClick={load}>↻ Refresh</button>
+          <button className="btn" onClick={load}><RefreshIcon size={14} /> Refresh</button>
         </div>
       </div>
 
@@ -61,12 +62,12 @@ export default function AttackLogs() {
 
       <form className="search-bar" onSubmit={handleSearch}>
         <div className="search-input-wrap">
-          <span className="icon">🔍</span>
+          <SearchIcon size={14} strokeWidth={2.5} />
           <input className="search-input" placeholder="Search by IP address..."
             value={searchInput} onChange={e => setSearchInput(e.target.value)} />
         </div>
         <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px' }}>Search</button>
-        {searchIP && <button type="button" className="btn" onClick={clearSearch}>✕ Clear</button>}
+        {searchIP && <button type="button" className="btn" onClick={clearSearch}>Clear</button>}
       </form>
 
       {error && <div className="error-box">{error}</div>}
@@ -77,7 +78,6 @@ export default function AttackLogs() {
         </div>
       ) : logs.length === 0 ? (
         <div className="empty">
-          <div className="icon">📋</div>
           <p>No attack logs found{searchIP ? ` for "${searchIP}"` : cat !== 'All' ? ` in "${cat}"` : ''}.</p>
           {(searchIP || cat !== 'All') && <button className="btn" style={{ marginTop: 12 }} onClick={clearSearch}>Clear filters</button>}
         </div>

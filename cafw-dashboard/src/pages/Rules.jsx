@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getRules, toggleRule } from '../api';
+import { SearchIcon, RefreshIcon } from '../components/Icons';
 
 const COLORS = {
-  'SQL Injection':     { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', i: '🗃️' },
-  XSS:                 { bg: 'rgba(245,158,11,0.1)', c: '#f59e0b', i: '⚠️' },
-  'Command Injection':  { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', i: '💻' },
-  'Path Traversal':     { bg: 'rgba(139,92,246,0.1)', c: '#8b5cf6', i: '📁' },
+  'SQL Injection':     { bg: 'rgba(239,68,68,0.1)', c: '#ef4444' },
+  XSS:                 { bg: 'rgba(245,158,11,0.1)', c: '#f59e0b' },
+  'Command Injection':  { bg: 'rgba(239,68,68,0.1)', c: '#ef4444' },
+  'Path Traversal':     { bg: 'rgba(139,92,246,0.1)', c: '#8b5cf6' },
 };
-const DEF = { bg: 'rgba(100,116,139,0.1)', c: '#64748b', i: '🔒' };
+const DEF = { bg: 'rgba(100,116,139,0.1)', c: '#64748b' };
 
 export default function Rules() {
   const [rules, setRules] = useState([]);
@@ -76,7 +77,7 @@ export default function Rules() {
             <span style={{ color: 'var(--text-muted)' }}>·</span>
             <span>{rules.length - activeN} inactive</span>
           </span>
-          <button className="btn" onClick={load}>↻ Refresh</button>
+          <button className="btn" onClick={load}><RefreshIcon size={14} /> Refresh</button>
         </div>
       </div>
 
@@ -85,7 +86,7 @@ export default function Rules() {
         <div className="chips">
           {Object.entries(counts).map(([cat, n]) => {
             const cl = COLORS[cat] || DEF;
-            return <span key={cat} className="badge" style={{ background: cl.bg, color: cl.c }}>{cl.i} {cat} ({n})</span>;
+            return <span key={cat} className="badge" style={{ background: cl.bg, color: cl.c }}>{cat} ({n})</span>;
           })}
         </div>
       )}
@@ -93,18 +94,17 @@ export default function Rules() {
       {/* Search */}
       <div className="search-bar">
         <div className="search-input-wrap">
-          <span className="icon">🔍</span>
+          <SearchIcon size={14} strokeWidth={2.5} />
           <input className="search-input" placeholder="Search rules..."
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        {search && <button className="btn" onClick={() => setSearch('')}>✕ Clear</button>}
+        {search && <button className="btn" onClick={() => setSearch('')}>Clear</button>}
       </div>
 
       {/* Rules List */}
       <div className="rules-list">
         {filtered.length === 0 ? (
           <div className="empty">
-            <div className="icon">🔒</div>
             <p>{search ? `No rules match "${search}"` : 'No rules found.'}</p>
             {search && <button className="btn" style={{ marginTop: 12 }} onClick={() => setSearch('')}>Clear search</button>}
           </div>
@@ -114,7 +114,7 @@ export default function Rules() {
           return (
             <div className="rule-card" key={rule.id} style={{ animationDelay: `${i * 0.03}s`, borderLeftColor: cl.c }}>
               <div className="info">
-                <h4>{cl.i} {rule.name}</h4>
+                <h4>{rule.name}</h4>
                 <p>{rule.description}</p>
                 <span className="badge" style={{ background: cl.bg, color: cl.c }}>{rule.category}</span>
               </div>

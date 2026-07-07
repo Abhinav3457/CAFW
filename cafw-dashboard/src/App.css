@@ -102,8 +102,6 @@
 .stat-card:hover .accent-bar { opacity: 1; }
 .stat-card .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
 .stat-card .label { font-size: 12px; font-weight: 500; color: var(--text-secondary); letter-spacing: 0.2px; }
-.stat-card .icon { font-size: 22px; opacity: 0.7; transition: opacity 0.3s; }
-.stat-card:hover .icon { opacity: 1; }
 .stat-card .value {
   font-size: 32px;
   font-weight: 700;
@@ -316,7 +314,6 @@ tr:hover td { background: rgba(56,78,120,0.06); }
   color: var(--text-muted);
   text-align: center;
 }
-.empty .icon { font-size: 44px; margin-bottom: 14px; opacity: 0.4; }
 .empty p { font-size: 14px; max-width: 360px; }
 .error-box {
   text-align: center;

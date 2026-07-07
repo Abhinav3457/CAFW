@@ -1,13 +1,13 @@
 import { useState } from 'react';
 
 const CAT = {
-  'SQL Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'SQL Injection', i: '🗃️' },
-  XSS:             { bg: 'rgba(245,158,11,0.1)', c: '#f59e0b', l: 'XSS', i: '⚠️' },
-  'Command Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'Cmd Injection', i: '💻' },
-  'Path Traversal':    { bg: 'rgba(139,92,246,0.1)', c: '#8b5cf6', l: 'Path Traversal', i: '📁' },
-  'Blocked IP':    { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Blocked IP', i: '🔒' },
+  'SQL Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'SQL Injection' },
+  XSS:             { bg: 'rgba(245,158,11,0.1)', c: '#f59e0b', l: 'XSS' },
+  'Command Injection': { bg: 'rgba(239,68,68,0.1)', c: '#ef4444', l: 'Cmd Injection' },
+  'Path Traversal':    { bg: 'rgba(139,92,246,0.1)', c: '#8b5cf6', l: 'Path Traversal' },
+  'Blocked IP':    { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Blocked IP' },
 };
-const DEF = { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Unknown', i: '❓' };
+const DEF = { bg: 'rgba(100,116,139,0.1)', c: '#64748b', l: 'Unknown' };
 
 export default function LogTable({ logs, showPayload = false }) {
   const [expanded, setExpanded] = useState(null);
@@ -48,7 +48,7 @@ export default function LogTable({ logs, showPayload = false }) {
                 <td><span className="endpoint">{log.endpoint}</span></td>
                 <td>
                   <span className="badge" style={{ background: b.bg, color: b.c }}>
-                    <span style={{ fontSize: 12 }}>{b.i}</span> {b.l}
+                     {b.l}
                   </span>
                 </td>
                 {showPayload && (

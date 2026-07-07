@@ -15,7 +15,7 @@ const tests = [
 ];
 
 async function runTests() {
-  console.log('\n  ╔══════════════════════════════════════════════╗');
+  console.log('\n╔══════════════════════════════════════════════╗');
   console.log('  ║        CAFW Firewall Test Suite              ║');
   console.log('  ╚══════════════════════════════════════════════╝\n');
 
@@ -37,13 +37,13 @@ async function runTests() {
       const status = res.status;
 
       if (shouldBeBlocked && status === 200) {
-        console.log(`  ⚠️  ${test.name.padEnd(25)} → ${status} (NOT BLOCKED - potential issue)`);
+        console.log(`  [!] ${test.name.padEnd(25)} → ${status} (NOT BLOCKED - potential issue)`);
         failed++;
       } else if (!shouldBeBlocked && status === 403) {
-        console.log(`  ⚠️  ${test.name.padEnd(25)} → ${status} (FALSE POSITIVE - safe request blocked)`);
+        console.log(`  [!] ${test.name.padEnd(25)} → ${status} (FALSE POSITIVE - safe request blocked)`);
         failed++;
       } else {
-        console.log(`  ✅ ${test.name.padEnd(25)} → ${status} (allowed)`);
+        console.log(`  [OK] ${test.name.padEnd(25)} → ${status} (allowed)`);
         passed++;
       }
     } catch (err) {
@@ -53,14 +53,14 @@ async function runTests() {
         const isAttackTest = test.name !== 'Safe Request' && test.name !== 'Safe Search';
 
         if (isAttackTest) {
-          console.log(`  🔴 BLOCKED  ${test.name.padEnd(17)} → ${status} (${data.category || data.reason || 'Attack detected'})`);
+          console.log(`  [BLOCKED] ${test.name.padEnd(17)} → ${status} (${data.category || data.reason || 'Attack detected'})`);
           passed++;
         } else {
-          console.log(`  ⚠️  ${test.name.padEnd(25)} → ${status} (FALSE POSITIVE - safe request blocked)`);
+          console.log(`  [!] ${test.name.padEnd(25)} → ${status} (FALSE POSITIVE - safe request blocked)`);
           failed++;
         }
       } else {
-        console.log(`  ❌ ${test.name.padEnd(25)} → CONNECTION ERROR (${err.message})`);
+        console.log(`  [ERR] ${test.name.padEnd(25)} → CONNECTION ERROR (${err.message})`);
         failed++;
       }
     }
@@ -70,9 +70,9 @@ async function runTests() {
   console.log(`  Results: ${passed} passed, ${failed} failed, ${tests.length} total\n`);
 
   if (failed === 0) {
-    console.log('  🎉 All tests passed! Firewall is working correctly.\n');
+    console.log('  [PASS] All tests passed! Firewall is working correctly.\n');
   } else {
-    console.log(`  ⚠️  ${failed} test(s) failed. Review firewall configuration.\n`);
+    console.log(`  [!] ${failed} test(s) failed. Review firewall configuration.\n`);
   }
 }
 

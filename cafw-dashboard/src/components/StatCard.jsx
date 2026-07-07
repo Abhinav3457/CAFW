@@ -1,11 +1,10 @@
-export default function StatCard({ label, value, color, icon, trend, trendLabel, progress, delay = 0 }) {
+export default function StatCard({ label, value, color, trend, trendLabel, progress, delay = 0 }) {
   const isUp = trend === 'up';
   return (
     <div className="stat-card" style={{ animationDelay: `${delay}s` }}>
       <div className="accent-bar" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
       <div className="header">
         <span className="label">{label}</span>
-        <span className="icon">{icon}</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span className="value" style={{ color }}>

@@ -93,12 +93,12 @@ app.use((err, req, res, next) => {
 async function start() {
   try {
     await initDatabase();
-    console.log('  📦 SQLite database initialized');
+    console.log('  [DB] SQLite database initialized');
 
     app.listen(PORT, () => {
-      console.log(`\n  🔥 CAFW Backend running at http://localhost:${PORT}`);
-      console.log(`  📊 Dashboard API: http://localhost:${PORT}/api/dashboard/stats`);
-      console.log(`  🛡️  Firewall active on all /test/* endpoints\n`);
+      console.log(`\n  [OK] CAFW Backend running at http://localhost:${PORT}`);
+      console.log(`  [API] Dashboard API: http://localhost:${PORT}/api/dashboard/stats`);
+      console.log(`  [FIREWALL] Firewall active on all /test/* endpoints\n`);
     });
   } catch (err) {
     console.error('Failed to initialize database:', err);

@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState } from 'react';
+import { GridIcon, ListIcon, LockIcon, ShieldIcon } from './Icons';
 
 const NAV = [
-  { path: '/', label: 'Dashboard', icon: '📊' },
-  { path: '/logs', label: 'Attack Logs', icon: '📋' },
-  { path: '/rules', label: 'Rules', icon: '🔒' },
+  { path: '/', label: 'Dashboard', icon: GridIcon },
+  { path: '/logs', label: 'Attack Logs', icon: ListIcon },
+  { path: '/rules', label: 'Rules', icon: LockIcon },
 ];
 
 const s = {
@@ -44,13 +45,16 @@ export default function Sidebar() {
   return (
     <div style={s.wrap}>
       <div style={s.logo}>
-        <h1 style={s.logoH1}><span style={{ fontSize: 24 }}>🛡️</span> CAFW</h1>
+        <h1 style={s.logoH1}>
+          <ShieldIcon size={24} strokeWidth={2.5} />
+          CAFW
+        </h1>
         <p style={s.logoSub}>Security Dashboard</p>
       </div>
 
       <div style={s.section}>Navigation</div>
       <nav style={s.nav}>
-        {NAV.map(({ path, label, icon }) => {
+        {NAV.map(({ path, label, icon: Icon }) => {
           const on = active(path);
           return (
             <NavLink
@@ -64,7 +68,14 @@ export default function Sidebar() {
               onMouseLeave={() => setHov(null)}
             >
               {on && <div style={s.activeBar} />}
-              <span style={{ fontSize: 17, transition: 'transform 0.2s', transform: hov === path ? 'scale(1.12)' : 'scale(1)', filter: on ? 'none' : 'grayscale(0.3)' }}>{icon}</span>
+              <span style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 20, height: 20, transition: 'transform 0.2s',
+                transform: hov === path ? 'scale(1.12)' : 'scale(1)',
+                opacity: on ? 1 : 0.6,
+              }}>
+                <Icon size={18} />
+              </span>
               <span>{label}</span>
             </NavLink>
           );
@@ -76,7 +87,7 @@ export default function Sidebar() {
           <div className="live-dot" />
           <span style={{ color: '#5a6f92', fontSize: 11, fontWeight: 500 }}>System Active</span>
         </div>
-        <div>CAFW v1.0.0 · Real-time</div>
+        <div>CAFW v1.0.0 — Real-time</div>
       </div>
     </div>
   );
